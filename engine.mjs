@@ -1,4 +1,4 @@
-export const VERSION='hqgd-1.0.0';
+export const VERSION='hqgd-3.0.0';
 export const SUBJECTS=['Toán','Lý','Văn','Sử','Hóa','Địa','Tiếng anh','Sinh','KTPL','Tin học','Công nghệ','Thể dục','GDQP'];
 export const SCHOOL_YEARS={'2026-2027':{'10':19,'11':13,'12':13}};
 export function schoolClasses(year){const counts=SCHOOL_YEARS[year];return counts?Object.entries(counts).flatMap(([grade,count])=>Array.from({length:count},(_,i)=>grade+'A'+String(i+1).padStart(2,'0'))):[];}

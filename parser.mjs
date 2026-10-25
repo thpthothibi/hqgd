@@ -1,4 +1,4 @@
-import {className,number,norm,SUBJECTS} from './engine.mjs';
+import {className,number,norm,SUBJECTS} from './engine.mjs?v=3.0.0';
 // Uses text positions and the actual teacher-cell borders, including merged cells.
 export function parsePage(content,ops,OPS,pageNumber){
  const items=content.items.filter(t=>t.str?.trim()).map(t=>({s:norm(t.str),x:t.transform[4],y:t.transform[5],w:t.width,h:t.height||10}));
@@ -30,7 +30,7 @@ export function parsePage(content,ops,OPS,pageNumber){
   rows.push({subject:'',class:className(c.s),teacher:norm(teacher),mid,final,n,page:pageNumber});
  }
  let detected=SUBJECTS.find(s=>new RegExp(`(?:MÔN|Môn)\\s*[:：]?\\s*${s}(?:\\s|$)`,'iu').test(text))||'';
- return {page:pageNumber,format:summary?'summary':'distribution',subject:detected,rows,warnings};
+ return {page:pageNumber,format:summary?'summary':'distribution',sourceTerm:Number(text.match(/HỌC KỲ\s*([12])/iu)?.[1])||null,subject:detected,rows,warnings};
 }
 export async function readPDF(data,pdfjs,progress=()=>{}){
  const doc=await pdfjs.getDocument({data,useSystemFonts:true}).promise,pages=[];
