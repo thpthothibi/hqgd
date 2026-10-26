@@ -1,4 +1,4 @@
-import {className,number,norm,SUBJECTS} from './engine.mjs?v=3.0.0';
+import {className,number,norm,SUBJECTS} from './engine.mjs';
 // Uses text positions and the actual teacher-cell borders, including merged cells.
 export function parsePage(content,ops,OPS,pageNumber){
  const items=content.items.filter(t=>t.str?.trim()).map(t=>({s:norm(t.str),x:t.transform[4],y:t.transform[5],w:t.width,h:t.height||10}));
