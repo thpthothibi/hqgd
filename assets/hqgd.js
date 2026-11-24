@@ -1,10 +1,10 @@
-import './tn2027.js?v=hqgd-10a01-v8-6';
-import {makePDFJobs,createHQGDPDF,availablePDFSubjects} from './hqgd-pdf.mjs?v=hqgd-10a01-v8-6';
-import {selectPeriod,periodLabel,classTable,baselineTable,availablePeriodIds,preferredAvailablePeriod} from './hqgd-period.mjs?v=hqgd-10a01-v8-6';
-import {buildHQGD,missingTeacher} from './hqgd-data.mjs?v=hqgd-10a01-v8-6';
-import {readAssignmentWorkbook,parseAssignments} from './hqgd-import.mjs?v=hqgd-10a01-v8-6';
-import {className} from './hqgd-source/engine.mjs?v=hqgd-10a01-v8-6';
-import {exportResults,exportClassWorkbook,exportTeacherWorkbook} from './hqgd-source/excel.mjs?v=hqgd-10a01-v8-6';
+import './tn2027.js?v=hqgd-bq-10a01-v8-6-2';
+import {makePDFJobs,createHQGDPDF,availablePDFSubjects} from './hqgd-pdf.mjs?v=hqgd-bq-10a01-v8-6-2';
+import {selectPeriod,periodLabel,classTable,groupedClassTable,baselineTable,availablePeriodIds,preferredAvailablePeriod} from './hqgd-period.mjs?v=hqgd-bq-10a01-v8-6-2';
+import {buildHQGD,missingTeacher} from './hqgd-data.mjs?v=hqgd-bq-10a01-v8-6-2';
+import {readAssignmentWorkbook,parseAssignments} from './hqgd-import.mjs?v=hqgd-bq-10a01-v8-6-2';
+import {className} from './hqgd-source/engine.mjs?v=hqgd-bq-10a01-v8-6-2';
+import {exportResults,exportClassWorkbook,exportTeacherWorkbook} from './hqgd-source/excel.mjs?v=hqgd-bq-10a01-v8-6-2';
 const el=id=>document.getElementById(id),E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>n===null||n===undefined?'—':Number(n).toLocaleString('vi-VN',{minimumFractionDigits:2,maximumFractionDigits:2});
 const unique=a=>[...new Set(a)].sort((a,b)=>String(a).localeCompare(String(b),'vi',{numeric:true}));
@@ -38,10 +38,14 @@ function render(){if(!active)return;sync();const mode=el('hqTerm').value;el('hqC
  if(!el('hqGrade').value){partitions=[];el('hqResults').innerHTML='<section class="card hq-empty">Chọn khối để xem báo cáo HQGD.</section>';el('hqHint').textContent='Chưa chọn khối. Không tự tải báo cáo toàn trường.';el('hqStats').innerHTML='';el('hqExport').disabled=el('hqPrint').disabled=true;return;}
  try{partitions=buildHQGD(records,assignmentList(),el('hqYear').value,el('hqGrade').value);}catch(e){el('hqResults').textContent=e.message;el('hqExport').disabled=el('hqPrint').disabled=true;return;}
  const selected=selectedGroups(),rows=selected.flatMap(p=>currentTerm(p)?.rows||[]).filter(chosen),missing=rows.filter(r=>!r.assigned).length;
- el('hqHint').textContent=`Năm ${el('hqYear').value} · Khối ${el('hqGrade').value} · ${selectedLabel()}. Lọc lớp chỉ thay phần hiển thị, không thay BQ khối hoặc hạng.`+periodNotice+(el('hqGrade').value==='10'?' Lớp 10A01 thống kê riêng; các lớp còn lại dùng chung bình quân và xếp hạng theo từng môn, không gồm 10A01.':'')+(missing?` ${missing} dòng lớp/môn chưa phân công giáo viên.`:'')+(el('hqGrade').value==='12'?' Bảng trên màn hình vẫn theo lớp hành chính; PDF nhóm Chọn TN dùng lớp học môn. Học sinh chọn TN chưa ghép được lớp được tách riêng; cần cập nhật Worker TN 2027 hoặc đối chiếu tên và lớp hành chính.':'')+(el('hqGrade').value==='12'?' Công nghệ: BQ tham chiếu theo từng giáo viên trong khối, cùng nhóm; không xếp hạng giữa các GV.':'');
+ el('hqHint').textContent=`Năm ${el('hqYear').value} · Khối ${el('hqGrade').value} · ${selectedLabel()}. Lọc lớp chỉ thay phần hiển thị, không thay BQ khối hoặc hạng.`+periodNotice+(el('hqGrade').value==='10'?' Giữ chung bảng; 10A01 có dòng bình quân riêng; các lớp còn lại dùng chung bình quân và xếp hạng theo từng môn, không gồm 10A01.':'')+(missing?` ${missing} dòng lớp/môn chưa phân công giáo viên.`:'')+(el('hqGrade').value==='12'?' Bảng trên màn hình vẫn theo lớp hành chính; PDF nhóm Chọn TN dùng lớp học môn. Học sinh chọn TN chưa ghép được lớp được tách riêng; cần cập nhật Worker TN 2027 hoặc đối chiếu tên và lớp hành chính.':'')+(el('hqGrade').value==='12'?' Công nghệ: BQ tham chiếu theo từng giáo viên trong khối, cùng nhóm; không xếp hạng giữa các GV.':'');
  el('hqStats').innerHTML=[['Lớp × môn × nhóm',rows.length],['Dòng đủ điểm theo cách tính',rows.filter(r=>r.effect!==null).length],['Có phân công',rows.filter(r=>r.assigned).length],['Nhóm báo cáo',selected.length]].map(([k,v])=>`<div class="hq-stat"><small>${E(k)}</small><strong>${v}</strong></div>`).join('');
  const pdfSubjects=availablePDFSubjects(hqRecords(),{year:el('hqYear').value,grade:el('hqGrade').value,subject:el('hqSubject').value,klass:el('hqClass').value,tn:el('hqTN').value},selected.flatMap(p=>p.report.rows.filter(chosen).map(r=>r.subject)));el('hqExport').disabled=el('hqPrint').disabled=!(tab==='export'?pdfSubjects.length:selected.length);
  if(tab==='assign'){renderAssignments();return;}if(tab==='export'){renderExport();return;}
+ if(tab==='classes'&&el('hqGrade').value==='10'){
+  const grouped=displayTable(groupedClassTable(selected.map(p=>({group:p.group,model:{...currentTerm(p),rows:currentTerm(p).rows.filter(chosen)}})),teacher));
+  el('hqResults').innerHTML=`<section class="card tablecard hq-report"><div class="cardtitle"><div><h2>Khối 10 · ${E(selectedLabel())}</h2><p>THPT Hồ Thị Bi · Năm học ${E(el('hqYear').value)} · ${E(el('hqSubject').value||'Tất cả môn')} · Bình quân 10A01 riêng</p></div></div>${table(grouped.headers,grouped.rows)}</section>`;return;
+ }
  el('hqResults').innerHTML=selected.map(p=>{
  const term=currentTerm(p);let headers,data;
  if(tab==='classes'){const t=displayTable(classTable({...term,rows:term.rows.filter(chosen)},teacher));headers=t.headers;data=t.rows;}
@@ -106,6 +110,10 @@ function storeAssignments(incoming){
 function exportHQ(){try{
  const wb=XLSX.utils.book_new(),meta=[['TRƯỜNG THPT HỒ THỊ BI – HQGD'],['Năm học',el('hqYear').value,'Khối',el('hqGrade').value],['Cách tính đang chọn',selectedLabel()],['Bảng bốn đợt / tổng hợp cả năm','Luôn dùng đủ bốn đợt, không thay đổi theo ô tính riêng học kỳ.'],['Công thức','Theo engine HQGD gốc; BQ khối không nhân sĩ số; không làm tròn trước khi tính.'],['Phạm vi','Khối 10: 10A01 riêng; các lớp còn lại chung theo từng môn, không gồm 10A01. BQ và hạng tính trước bộ lọc lớp.'],['HSĐT','HQ HK1 - HQ HK2'],['Nhóm TN','Toán, Ngữ văn chung; các môn khác tách theo trạng thái từng kỳ.'],['Giáo viên','Ô trống là chưa phân công. Hạng GV trống nếu còn lớp chưa phân công.'],['Lưu ý','Đây là thống kê trên điểm đã nhập; không xác nhận đủ toàn bộ lớp của trường.']];
  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(meta),'HUONG_DAN');
+ if(tab==='classes'&&el('hqGrade').value==='10'){
+  const groups=selectedGroups().map(p=>({group:p.group,model:{...currentTerm(p),rows:currentTerm(p).rows.filter(chosen)}})),t=groupedClassTable(groups,x=>missingTeacher(x)?'':x);
+  const ws=XLSX.utils.aoa_to_sheet([['TRƯỜNG THPT HỒ THỊ BI – HQGD'],['Năm học',el('hqYear').value,'Cách tính',selectedLabel()],['10A01 và các lớp còn lại chung bảng, bình quân riêng'],[],t.headers,...t.rows]);ws['!cols']=t.headers.map((h,i)=>({wch:i===1||i===2?30:20}));XLSX.utils.book_append_sheet(wb,ws,'KET_QUA_LOP');XLSX.writeFile(wb,`HQGD_${el('hqYear').value}_Khoi10.xlsx`);return;
+ }
  selectedGroups().forEach((p,i)=>{let report=structuredClone(p.report);for(const t of [report.first,report.second])for(const r of t.rows)if(missingTeacher(r.teacher))r.teacher='';for(const r of report.rows)for(const k of ['teacher1','teacher2'])if(missingTeacher(r[k]))r[k]='';
  // Apply display filters after calculation, exactly as the original results exports do.
  report.rows=report.rows.filter(chosen);report.teachers=report.teachers.filter(r=>teacherChosen(r,p));
